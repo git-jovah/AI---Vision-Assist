@@ -29,17 +29,18 @@ def function(img,destiny: str):
     query_dict = {
         "camera":"explain everything in the picture?",
         "obj_det":"what objects or things do you see in this picture and Object and Obstacle Detection for Safe Navigation",
-        "auto": "what you see in the picture recognizing items, reading labels, or providing context-specific information."
+        "auto": "what you see in the picture, recognizing items, reading labels, or providing context-specific information."
     }
         
     genai.configure(api_key=Google_Api_Key)
     
     chat_model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
+    img = Image.open(img)
+    extracted_text = pytesseract.image_to_string(img)
+    statment = st.container(border=True)
     try:
-        img = Image.open(img)
-        extracted_text = pytesseract.image_to_string(img)
         if destiny:
             response = chat_model.generate_content([img,query_dict[destiny]])
             st.markdown(response.text)
@@ -54,7 +55,19 @@ def function(img,destiny: str):
                         
                 with col2:
                     if st.button(":red[stop] voice assist",use_container_width=True):
-                        engine.stop()
+                        if engine._inLoop:
+                            engine.endLoop()
+                            engine.stop()
+                        else:
+                            pass
+                with col3:
+                    if st.button("Extract Text", use_container_width=True):
+                        if extracted_text:
+                            statment.subheader("Text extracted from the image:")
+                            statment.markdown(extracted_text)
+                        else:
+                            st.warning("There is no text in the image.")
+                    
                 
             else:
                 with col1:
